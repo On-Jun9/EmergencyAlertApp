@@ -62,13 +62,16 @@ class homeState extends State<home> {
             } else {
               print("스트림빌더 작동");
               markers = {}; //마커 초기화
-
               snapshot.data!.docs.forEach((change) {
                 //마커 입력
                 var markerIdVal = change.id;
                 final MarkerId markerId = MarkerId(markerIdVal);
                 markers[markerId] = Marker(
                   markerId: markerId,
+                  onTap: () {
+                    getlocainfo(markerIdVal);
+                    print(markerIdVal);
+                  },
                   position: LatLng(change['location'].latitude,
                       change['location'].longitude),
                   infoWindow: InfoWindow(
@@ -111,14 +114,18 @@ class homeState extends State<home> {
     );
   }
 
+  void getlocainfo(String markerId) {
+    FirebaseFirestore.instance.collection('좌표(임시)').doc(markerId).get().then((ds) {
+      locaname = ds.get('name').toString();
+      locaLat1 = ds.get('location').latitude.toString();
+      locaLat2 = ds.get('location').longitude.toString();
+    });
+  }
+
   void _showDialog() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        // FirebaseFirestore.instance.collection('좌표').doc(markerValue1.toString()).get().then((makerInfo) {
-        //   String locationName =  makerInfo['name'].toString();
-        //   print(locationName);
-        // });
         print('dialog : ' + locaname);
         return AlertDialog(
           title: new Text("제보 화면 보기"),
