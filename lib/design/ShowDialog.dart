@@ -43,7 +43,7 @@ class _ShowDialogState extends State<ShowDialog> {
               break;
           }
           //한국시간 변경
-          var _time = snapshot.data!['제보시간'].toDate().add(Duration(hours: 9));
+          var _time = snapshot.data!['제보시간'].toDate();//.add(Duration(hours: 9))
           return AlertDialog(
             title: Text('상황 정보',style: TextStyle(fontWeight: FontWeight.bold)),
             content: SingleChildScrollView(
