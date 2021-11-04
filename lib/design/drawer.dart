@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_team_project/design/boardPage.dart';
 import 'package:flutter_team_project/design/firstAidPage.dart';
 import 'package:flutter_team_project/design/googleLogin.dart';
 
@@ -79,6 +80,23 @@ class _drawerMenuState extends State<drawerMenu> {
                             builder: (context) => firstaid()));
                   }, //메뉴2 동작
                   trailing: Icon(Icons.arrow_forward_ios), //메뉴2 화살표
+                ),
+                ListTile(
+                  leading: Icon(
+                    //메뉴3 아이콘
+                    Icons.insert_comment_outlined,
+                    color: Colors.grey[850],
+                  ),
+                  title: Text('게시판'), //메뉴3 텍스트
+                  onTap: () {
+                    Navigator.push(
+                      //네비게이터
+                        context,
+                        MaterialPageRoute(
+                          //페이지 이동
+                            builder: (context) => boardPage()));
+                  }, //메뉴2 동작
+                  trailing: Icon(Icons.arrow_forward_ios), //메뉴2 화살표
                 )
               ],
             );
@@ -122,6 +140,23 @@ class _drawerMenuState extends State<drawerMenu> {
                         MaterialPageRoute(
                           //페이지 이동
                             builder: (context) => firstaid()));
+                  }, //메뉴2 동작
+                  trailing: Icon(Icons.arrow_forward_ios), //메뉴2 화살표
+                ),
+                ListTile(
+                  leading: Icon(
+                    //메뉴3 아이콘
+                    Icons.insert_comment_outlined,
+                    color: Colors.grey[850],
+                  ),
+                  title: Text('게시판'), //메뉴3 텍스트
+                  onTap: () {
+                    Navigator.push(
+                      //네비게이터
+                        context,
+                        MaterialPageRoute(
+                          //페이지 이동
+                            builder: (context) => boardPage()));
                   }, //메뉴2 동작
                   trailing: Icon(Icons.arrow_forward_ios), //메뉴2 화살표
                 )
