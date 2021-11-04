@@ -1,7 +1,22 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_team_project/design/boardContent.dart';
 import 'package:flutter_team_project/design/insertForm.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
+
+class BoardData {
+
+  // String writer; // 작성자
+  // String title; // 제목
+  // Timestamp time; // 시간
+  String docName; //id값
+
+  // BoardData(this.writer, this.title, this.time,this.docName);
+  BoardData(this.docName);
+
+}
 
 class boardPage extends StatefulWidget {
   const boardPage({Key? key}) : super(key: key);
@@ -21,6 +36,7 @@ class _boardPageState extends State<boardPage> {
   @override
   void initState() {
     super.initState();
+    initializeDateFormatting();
     stream = newStream();
     _scrollController.addListener(() {
       if (_scrollController.position.pixels ==
@@ -51,7 +67,6 @@ class _boardPageState extends State<boardPage> {
               Icons.add,
             ),
             onPressed: () {
-              //todo 네이게이터
               Navigator.push(
                   //네비게이터
                   context,
@@ -88,25 +103,27 @@ class _boardPageState extends State<boardPage> {
               // );
             }
           }),
-      floatingActionButton: FloatingActionButton.extended(
-          onPressed: () {
-            var count = 1;
-            while (count < 120) {
-              FirebaseFirestore.instance.collection('게시판').add({
-                'content': '내용' + count.toString(),
-                'time': FieldValue.serverTimestamp(),
-                'title': '제목입니다' + count.toString(),
-                'uid': '임시값',
-                'writer': '임시작성자' + count.toString()
-              });
-              count = count + 1;
-            }
-          },
-          label: Text('추가')),
+      // floatingActionButton: FloatingActionButton.extended(
+      //     onPressed: () {
+      //       var count = 1;
+      //       while (count < 120) {
+      //         FirebaseFirestore.instance.collection('게시판').add({
+      //           'content': '내용' + count.toString(),
+      //           'time': FieldValue.serverTimestamp(),
+      //           'title': '제목입니다' + count.toString(),
+      //           'uid': '임시값',
+      //           'writer': '임시작성자' + count.toString()
+      //         });
+      //         count = count + 1;
+      //       }
+      //     },
+      //     label: Text('추가')),
     );
   }
 
   Widget _buildListItem(BuildContext context, DocumentSnapshot data) {
+    // BoardData selectedData = BoardData(data['writer'], data['title'], data['time'],data.id);
+    BoardData selectedData = BoardData(data.id);
     return Column(
       children: [
         ListTile(
@@ -128,9 +145,9 @@ class _boardPageState extends State<boardPage> {
               Expanded(
                 flex: 1,
                 child: Text(
-                  // get_item.insertTime.toString(),
-                  data['time'].toString(),
-                  // _DatePrint(data.isNoModify, insert_time, selected_item.datetime),
+                  DateFormat.yMd('ko_KR')
+                      .add_jms()
+                      .format(data['time'].toDate()).toString(),
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 10),
                 ),
@@ -138,7 +155,12 @@ class _boardPageState extends State<boardPage> {
             ],
           ),
           onTap: () {
-            //todo 네이게이터
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                //페이지 이동
+                builder: (context) => BoardContent(selected_item: selectedData),
+              ));
           },
         ),
         Container(
