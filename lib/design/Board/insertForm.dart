@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class InsertForm extends StatefulWidget {
@@ -14,7 +15,6 @@ class InsertFormState extends State<InsertForm> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     // print('게시글 작성 위젯 생성 (initState)');
   }
@@ -26,7 +26,6 @@ class InsertFormState extends State<InsertForm> {
 
   @override
   void dispose() {
-    // TODO: implement dispose
     _contentController.dispose();
     _titleController.dispose();
     super.dispose();
@@ -68,8 +67,8 @@ class InsertFormState extends State<InsertForm> {
                         controller: _titleController,
                         autofocus: true,
                         validator: (value) {
-                          if(value == "") {return '제목 누락';}//todo 수정
-                          return null;
+                          if(value != "") {return null;}
+                          return '제목 누락';
                         },
 
                         decoration: InputDecoration(
@@ -152,8 +151,8 @@ class InsertFormState extends State<InsertForm> {
                       child: TextFormField(
                         controller: _contentController,
                         validator: (value) {
-                          if(value=="") {return '내용 누락';}//todo 수정
-                          return null;
+                          if(value!="") {return null;}
+                          return '내용 누락';
                         },
                         decoration: InputDecoration(
                           border: InputBorder.none,
@@ -179,10 +178,7 @@ class InsertFormState extends State<InsertForm> {
               height: 1,
             ),
 
-
-
             // 등록 및 수정 버튼
-
 
             Container(
               color: Colors.white10,
@@ -261,6 +257,19 @@ class InsertFormState extends State<InsertForm> {
                               );
                             },
                           );
+                        }
+                        else{
+                          FirebaseFirestore.instance.collection('게시판').add({
+                            'content': _contentController.text,
+                            'time': FieldValue.serverTimestamp(),
+                            'title': _titleController.text,
+                            'uid': '임시값',
+                            'writer': '임시작성자',
+                          });
+
+                          ScaffoldMessenger.of(context)
+                              .showSnackBar(SnackBar(content: Text('삽입됨')));
+                          Navigator.pop(context);
                         }
 
 

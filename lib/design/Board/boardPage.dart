@@ -29,6 +29,11 @@ class _boardPageState extends State<boardPage> {
 
   var _lastRow = 0;
   final FETCH_ROW = 20;
+  Text _text = Text(
+      '',
+      textAlign: TextAlign.center,
+      style: TextStyle(fontSize: 10)
+  );
 
   var stream;
   ScrollController _scrollController = new ScrollController();
@@ -68,7 +73,7 @@ class _boardPageState extends State<boardPage> {
             ),
             onPressed: () {
               Navigator.push(
-                  //네비게이터
+                //네비게이터
                   context,
                   MaterialPageRoute(
                     //페이지 이동
@@ -93,6 +98,7 @@ class _boardPageState extends State<boardPage> {
                     _lastRow = currentRow;
                   }
                   print("lastrow : " + _lastRow.toString());
+                  // _dateCheck(snapshot.data!.docs[i]);
                   return _buildListItem(context, snapshot.data!.docs[i]);
                 },
               );
@@ -122,52 +128,69 @@ class _boardPageState extends State<boardPage> {
   }
 
   Widget _buildListItem(BuildContext context, DocumentSnapshot data) {
+
     // BoardData selectedData = BoardData(data['writer'], data['title'], data['time'],data.id);
     BoardData selectedData = BoardData(data.id);
-    return Column(
-      children: [
-        ListTile(
-          title: Row(
-            children: <Widget>[
-              Expanded(
-                flex: 4,
-                child: Text(
-                  data['title'],
-                ),
+    Timestamp? time = data['time'];
+    if(time == null){
+      time = Timestamp(1633964070, 0);
+    }
+    // _dateCheck(data);
+    return  Column(
+          children: [
+            ListTile(
+              title: Row(
+                children: <Widget>[
+                  Expanded(
+                    flex: 4,
+                    child: Text(
+                      data['title'],
+                    ),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      data['writer'],
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 1,
+                    child: Text(
+                        DateFormat.yMd('ko_KR')
+                        .add_jms()
+                        .format(time.toDate())
+                        .toString(),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 10)
+                    ),
+                    // child: Text(
+                    //   DateFormat.yMd('ko_KR')
+                    //       .add_jms()
+                    //       .format(
+                    //       data['time'].toDate() == null ? 1 : data['time'].toDate())
+                    //       .toString(),
+                    //   textAlign: TextAlign.center,
+                    //   style: TextStyle(fontSize: 10),
+                    // ),
+                  ),
+                ],
               ),
-              Expanded(
-                flex: 2,
-                child: Text(
-                  data['writer'],
-                  style: TextStyle(fontSize: 12),
-                ),
-              ),
-              Expanded(
-                flex: 1,
-                child: Text(
-                  DateFormat.yMd('ko_KR')
-                      .add_jms()
-                      .format(data['time'].toDate()).toString(),
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 10),
-                ),
-              ),
-            ],
-          ),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                //페이지 이동
-                builder: (context) => BoardContent(selected_item: selectedData),
-              ));
-          },
-        ),
-        Container(
-          color: Colors.black12,
-          height: 2,
-        ),
-      ],
-    );
-  }
+              onTap: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      //페이지 이동
+                      builder: (context) =>
+                          BoardContent(selected_item: selectedData),
+                    ));
+              },
+            ),
+            Container(
+              color: Colors.black12,
+              height: 2,
+            ),
+          ],
+        );
+      }
 }
