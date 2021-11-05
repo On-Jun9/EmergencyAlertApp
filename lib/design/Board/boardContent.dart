@@ -9,7 +9,6 @@ import 'package:intl/intl.dart';
 class BoardCommentData {
   String docName; //id값
   BoardCommentData(this.docName);
-
 }
 
 class BoardContent extends StatefulWidget {
@@ -54,28 +53,22 @@ class _BoardContentState extends State<BoardContent> {
 
   @override
   Widget build(BuildContext context) {
-    StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('게시판')
-            .doc(widget.selected_item.docName)
-            .collection('comment')
-            .orderBy("time", descending: true)
-            .snapshots(),
-        builder: (context, snapshot) {
-          setState(() {
-            list_size = snapshot.data!.docs.length as double;
-          });
-          return Center(
-            child: Text('2'),
-          );
-        });
     return StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
             .collection('게시판')
             .doc(widget.selected_item.docName)
             .snapshots(),
         builder: (context, snapshot) {
-          if (snapshot.hasData) {
+          // print(snapshot.data!.exists);
+          bool _exists = true;
+          if (!snapshot.hasData || !snapshot.data!.exists){
+            return Scaffold(
+              appBar: AppBar(
+                title: Text('게시판'),
+              ),
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }  else {
             print('list size 값 1: ' + list_size.toString());
             sWriter = snapshot.data!['writer'];
             sTime = snapshot.data!['time'];
@@ -148,7 +141,7 @@ class _BoardContentState extends State<BoardContent> {
                                 print(result);
                                 switch (result) {
                                   case Settings.modify:
-                                    // 게시글 수정 네비게이터
+                                  // 게시글 수정 네비게이터
                                     Navigator.push(
                                         context,
                                         MaterialPageRoute(
@@ -158,13 +151,13 @@ class _BoardContentState extends State<BoardContent> {
                                         ));
                                     break;
                                   case Settings.delete:
-                                    // 게시글 삭제 네비게이터
+                                  // 게시글 삭제 네비게이터
                                     _MakeSureWhetherDeleteThisItem(context);
                                     break;
                                 }
                               },
                               itemBuilder: (BuildContext context) =>
-                                  <PopupMenuEntry<Settings>>[
+                              <PopupMenuEntry<Settings>>[
                                 const PopupMenuItem<Settings>(
                                   value: Settings.modify,
                                   child: Text('게시글 수정'),
@@ -277,7 +270,7 @@ class _BoardContentState extends State<BoardContent> {
                             Expanded(
                               child: Padding(
                                 padding:
-                                    const EdgeInsets.only(top: 10, right: 25),
+                                const EdgeInsets.only(top: 10, right: 25),
                                 child: ElevatedButton(
                                   child: Text(
                                     '등록',
@@ -304,12 +297,12 @@ class _BoardContentState extends State<BoardContent> {
                                       'uid': '유저 UID값',
                                       'time': FieldValue.serverTimestamp(),
                                     }).then((value) => {
-                                              ScaffoldMessenger.of(context)
-                                                  .showSnackBar(SnackBar(
-                                                      content:
-                                                          Text('댓글 등록 완료'))),
-                                              _replyController.text = '',
-                                            });
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(SnackBar(
+                                          content:
+                                          Text('댓글 등록 완료'))),
+                                      _replyController.text = '',
+                                    });
                                     countDocuments();
                                     // text가 listtile로 출력됨. - listtile 내에서 삭제기능만 넣을 예정.
                                     // print('댓글 정렬 값 : '+i_replySorting.toString());
@@ -330,17 +323,10 @@ class _BoardContentState extends State<BoardContent> {
                     ),
                   ],
                 )
-                // Text(DateFormat.yMd('ko_KR')
-                //     .add_jms()
-                //     .format(widget.selected_item.time.toDate()).toString() +'\n'+
-                //     widget.selected_item.title +'\n'+ widget.selected_item.writer),
-                );
-          } else {
-            return Scaffold(
-              appBar: AppBar(
-                title: Text('게시판'),
-              ),
-              body: Center(child: CircularProgressIndicator()),
+              // Text(DateFormat.yMd('ko_KR')
+              //     .add_jms()
+              //     .format(widget.selected_item.time.toDate()).toString() +'\n'+
+              //     widget.selected_item.title +'\n'+ widget.selected_item.writer),
             );
           }
         });
@@ -389,13 +375,11 @@ class _BoardContentState extends State<BoardContent> {
             TextButton(
               onPressed: () {
                 // stack에서 alert 창 pop
-                Navigator.pop(context, true);
                 FirebaseFirestore.instance
                     .collection('게시판')
                     .doc(widget.selected_item.docName)
-                    .delete()
-                    .then((value) => ScaffoldMessenger.of(context)
-                        .showSnackBar(SnackBar(content: Text('삭제되었습니다.'))));
+                    .delete();
+                Navigator.pop(context, true);
               },
               child: Text('확인'),
             ),
@@ -474,7 +458,9 @@ class _BoardContentState extends State<BoardContent> {
                 FirebaseFirestore.instance
                     .collection('게시판')
                     .doc(widget.selected_item.docName)
-                    .collection('comment').doc(data.id).delete();
+                    .collection('comment')
+                    .doc(data.id)
+                    .delete();
                 Navigator.pop(context, true);
                 countDocuments();
               },
@@ -482,7 +468,7 @@ class _BoardContentState extends State<BoardContent> {
             ),
             TextButton(
               onPressed: () {
-                Navigator.pop(context,false);
+                Navigator.pop(context, false);
               },
               child: Text('취소'),
             ),

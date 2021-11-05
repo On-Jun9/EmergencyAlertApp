@@ -86,7 +86,7 @@ class _boardPageState extends State<boardPage> {
       body: StreamBuilder<QuerySnapshot>(
           stream: stream,
           builder: (context, snapshot) {
-            if (!snapshot.hasData) {
+            if (!snapshot.hasData || snapshot.hasError) {
               return Center(child: CircularProgressIndicator()); //로딩
             } else {
               return ListView.builder(
@@ -98,7 +98,6 @@ class _boardPageState extends State<boardPage> {
                     _lastRow = currentRow;
                   }
                   print("lastrow : " + _lastRow.toString());
-                  // _dateCheck(snapshot.data!.docs[i]);
                   return _buildListItem(context, snapshot.data!.docs[i]);
                 },
               );
@@ -128,14 +127,11 @@ class _boardPageState extends State<boardPage> {
   }
 
   Widget _buildListItem(BuildContext context, DocumentSnapshot data) {
-
-    // BoardData selectedData = BoardData(data['writer'], data['title'], data['time'],data.id);
     BoardData selectedData = BoardData(data.id);
     Timestamp? time = data['time'];
     if(time == null){
       time = Timestamp(1633964070, 0);
     }
-    // _dateCheck(data);
     return  Column(
           children: [
             ListTile(
