@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_team_project/design/boardPage.dart';
+import 'package:flutter_team_project/design/Board/boardPage.dart';
 
 class ModifyForm extends StatefulWidget {
   ModifyForm({Key? key, required this.sDocId}) : super(key: key);

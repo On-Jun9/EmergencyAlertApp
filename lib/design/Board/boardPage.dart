@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_team_project/design/boardContent.dart';
-import 'package:flutter_team_project/design/insertForm.dart';
+import 'package:flutter_team_project/design/Board/boardContent.dart';
+import 'package:flutter_team_project/design/Board/insertForm.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 

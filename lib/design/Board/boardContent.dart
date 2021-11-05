@@ -1,10 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_team_project/design/boardPage.dart';
-import 'package:flutter_team_project/design/modifyForm.dart';
+import 'package:flutter_team_project/design/Board/boardPage.dart';
+import 'package:flutter_team_project/design/Board/modifyForm.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
+
+class BoardCommentData {
+  String docName; //id값
+  BoardCommentData(this.docName);
+
+}
 
 class BoardContent extends StatefulWidget {
   const BoardContent({Key? key, required this.selected_item}) : super(key: key);
@@ -17,31 +23,65 @@ class BoardContent extends StatefulWidget {
 enum Settings { modify, delete }
 
 class _BoardContentState extends State<BoardContent> {
-  double list_size = 0.0;
+  double list_size = 0.0; //120
   String sWriter = '';
   String sTitle = '';
   Timestamp sTime = Timestamp(0, 0);
   String sContent = '';
 
+  var _replyController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
     initializeDateFormatting();
+    countDocuments(); //리스트 사이즈 변경
+  }
+
+  countDocuments() async {
+    //리스트 사이즈 변경
+    QuerySnapshot _myDoc = await FirebaseFirestore.instance
+        .collection('게시판')
+        .doc(widget.selected_item.docName)
+        .collection('comment')
+        .get();
+    List<DocumentSnapshot> _myDocCount = _myDoc.docs;
+    print(_myDocCount.length); // Count of Documents in Collection
+    setState(() {
+      list_size = _myDocCount.length.toDouble();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<DocumentSnapshot>(
-        future: FirebaseFirestore.instance
+    StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
             .collection('게시판')
             .doc(widget.selected_item.docName)
-            .get(),
+            .collection('comment')
+            .orderBy("time", descending: true)
+            .snapshots(),
+        builder: (context, snapshot) {
+          setState(() {
+            list_size = snapshot.data!.docs.length as double;
+          });
+          return Center(
+            child: Text('2'),
+          );
+        });
+    return StreamBuilder<DocumentSnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('게시판')
+            .doc(widget.selected_item.docName)
+            .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
+            print('list size 값 1: ' + list_size.toString());
             sWriter = snapshot.data!['writer'];
             sTime = snapshot.data!['time'];
             sTitle = snapshot.data!['title'];
             sContent = snapshot.data!['content'];
+            _load123(context);
             BoardData selectedData = BoardData(widget.selected_item.docName);
             return Scaffold(
                 appBar: AppBar(
@@ -115,7 +155,7 @@ class _BoardContentState extends State<BoardContent> {
                                           //페이지 이동
                                           builder: (context) =>
                                               ModifyForm(sDocId: selectedData),
-                                        )).then((value) => setState(() {}));
+                                        ));
                                     break;
                                   case Settings.delete:
                                     // 게시글 삭제 네비게이터
@@ -182,6 +222,34 @@ class _BoardContentState extends State<BoardContent> {
                       ),
                     ),
                     Container(
+                      color: Colors.black12,
+                      width: 350,
+                      height: 1,
+                    ),
+                    Container(
+                      height: list_size * 125,
+                      child: Padding(
+                        padding: const EdgeInsets.only(
+                            left: 25, top: 15, right: 25, bottom: 15),
+                        child: _load123(context),
+                        //댓글 리스트
+                        // child: StreamBuilder<QuerySnapshot>(
+                        //   stream: FirebaseFirestore.instance.collection('게시판').doc(widget.selected_item.docName).collection('comment').snapshots(),
+                        //   builder: (context,commentsnapshot){
+                        //     if(!commentsnapshot.hasData){
+                        //       return Center(child: CircularProgressIndicator());
+                        //     }else{
+                        //       return ListView(
+                        //         commentsnapshot.data.docs.map((e) => null),
+                        //       );
+                        //     }
+                        //   },
+                        // )
+                        // children: _replyItems.map((data) => _buildReplyWidget(data)).toList(),
+                        // ),
+                      ),
+                    ),
+                    Container(
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 15),
                         child: Row(
@@ -189,10 +257,10 @@ class _BoardContentState extends State<BoardContent> {
                             Expanded(
                               flex: 3,
                               child: Padding(
-                                padding:
-                                    const EdgeInsets.only(left: 27, right: 15),
+                                padding: const EdgeInsets.only(
+                                    top: 10, left: 27, right: 15),
                                 child: TextField(
-                                  // controller: _replyController,
+                                  controller: _replyController,
                                   decoration: InputDecoration(
                                     border: OutlineInputBorder(),
                                     hintText: '댓글쓰기',
@@ -208,7 +276,8 @@ class _BoardContentState extends State<BoardContent> {
                             ),
                             Expanded(
                               child: Padding(
-                                padding: const EdgeInsets.only(right: 25),
+                                padding:
+                                    const EdgeInsets.only(top: 10, right: 25),
                                 child: ElevatedButton(
                                   child: Text(
                                     '등록',
@@ -225,6 +294,23 @@ class _BoardContentState extends State<BoardContent> {
                                     ).shadowColor,
                                   ),
                                   onPressed: () {
+                                    FirebaseFirestore.instance
+                                        .collection('게시판')
+                                        .doc(widget.selected_item.docName)
+                                        .collection('comment')
+                                        .add({
+                                      'commentC': _replyController.text,
+                                      'id': '임시Id',
+                                      'uid': '유저 UID값',
+                                      'time': FieldValue.serverTimestamp(),
+                                    }).then((value) => {
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(SnackBar(
+                                                      content:
+                                                          Text('댓글 등록 완료'))),
+                                              _replyController.text = '',
+                                            });
+                                    countDocuments();
                                     // text가 listtile로 출력됨. - listtile 내에서 삭제기능만 넣을 예정.
                                     // print('댓글 정렬 값 : '+i_replySorting.toString());
                                     // print('댓글 순번 : '+i_reply.toString());
@@ -234,28 +320,12 @@ class _BoardContentState extends State<BoardContent> {
                                     // i_replySorting--;
                                     // i_reply++;
                                     //
-                                    list_size += 140;
                                   },
                                 ),
                               ),
                             ),
                           ],
                         ),
-                      ),
-                    ),
-                    Container(
-                      color: Colors.black12,
-                      width: 350,
-                      height: 1,
-                    ),
-                    Container(
-                      height: list_size,
-                      child: Padding(
-                        padding: const EdgeInsets.only(
-                            left: 25, top: 15, right: 25, bottom: 15),
-                        child: ListView(
-                            // children: _replyItems.map((data) => _buildReplyWidget(data)).toList(),
-                            ),
                       ),
                     ),
                   ],
@@ -275,6 +345,30 @@ class _BoardContentState extends State<BoardContent> {
           }
         });
   }
+
+  Widget _load123(BuildContext context) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('게시판')
+          .doc(widget.selected_item.docName)
+          .collection('comment')
+          .orderBy("time", descending: false)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return Center(child: CircularProgressIndicator()); //로딩
+        } else {
+          return ListView.builder(
+            itemCount: snapshot.data!.docs.length,
+            itemBuilder: (context, i) {
+              return _buildReplyWidget(context, snapshot.data!.docs[i]);
+            },
+          );
+        }
+      },
+    );
+  }
+
   _MakeSureWhetherDeleteThisItem(BuildContext context) async {
     var delete_flag = false; // (bool) : 삭제할 것인지 신호를 받는 역할
 
@@ -290,23 +384,25 @@ class _BoardContentState extends State<BoardContent> {
               ],
             ),
           ),
-          contentPadding:
-          EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 10.0),
+          contentPadding: EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 10.0),
           actions: <Widget>[
             TextButton(
               onPressed: () {
                 // stack에서 alert 창 pop
                 Navigator.pop(context, true);
-                FirebaseFirestore.instance.collection('게시판').doc(widget.selected_item.docName).delete().then(
-                  (value) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('삭제되었습니다.')))
-                );
+                FirebaseFirestore.instance
+                    .collection('게시판')
+                    .doc(widget.selected_item.docName)
+                    .delete()
+                    .then((value) => ScaffoldMessenger.of(context)
+                        .showSnackBar(SnackBar(content: Text('삭제되었습니다.'))));
               },
               child: Text('확인'),
             ),
             TextButton(
               onPressed: () {
                 // Navigator.of(context).pop();
-                Navigator.pop(context,false);
+                Navigator.pop(context, false);
               },
               child: Text('취소'),
             ),
@@ -315,12 +411,84 @@ class _BoardContentState extends State<BoardContent> {
       },
     );
 
-    if(delete_flag==true) {
-
-     Navigator.pop(context);
-
+    if (delete_flag == true) {
+      Navigator.pop(context);
     }
-
   }
 
+  Widget _buildReplyWidget(BuildContext context, DocumentSnapshot data) {
+    return Column(
+      children: <Widget>[
+        ListTile(
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Text(
+                  data['id'],
+                  style: TextStyle(color: Colors.black45),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Text(
+                  data['commentC'],
+                ),
+              ),
+            ],
+          ),
+          trailing: IconButton(
+              icon: Icon(Icons.remove),
+              onPressed: () {
+                // 댓글 삭제 여부 묻기.
+                _MakeSureWhetherDeleteThisReply(data);
+              }),
+        ),
+        Container(
+          color: Colors.black12,
+          height: 1,
+        ),
+      ],
+    );
+  }
+
+  _MakeSureWhetherDeleteThisReply(DocumentSnapshot data) async {
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('이 댓글을 삭제하시겠습니까?'),
+              ],
+            ),
+          ),
+          contentPadding: EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 10.0),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                // stack에서 alert 창 pop
+                FirebaseFirestore.instance
+                    .collection('게시판')
+                    .doc(widget.selected_item.docName)
+                    .collection('comment').doc(data.id).delete();
+                Navigator.pop(context, true);
+                countDocuments();
+              },
+              child: Text('확인'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context,false);
+              },
+              child: Text('취소'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }
