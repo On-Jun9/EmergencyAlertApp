@@ -20,7 +20,6 @@ class _drawerMenuState extends State<drawerMenu> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     authState = FirebaseAuth.instance.authStateChanges();
   }
