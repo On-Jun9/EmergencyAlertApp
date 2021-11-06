@@ -59,8 +59,6 @@ class _BoardContentState extends State<BoardContent> {
             .doc(widget.selected_item.docName)
             .snapshots(),
         builder: (context, snapshot) {
-          // print(snapshot.data!.exists);
-          bool _exists = true;
           if (!snapshot.hasData || !snapshot.data!.exists){
             return Scaffold(
               appBar: AppBar(
@@ -81,6 +79,7 @@ class _BoardContentState extends State<BoardContent> {
                   title: Text('게시판'),
                 ),
                 body: ListView(
+                  physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
                   children: <Widget>[
                     Container(
                       color: Colors.blueGrey[50],
@@ -460,7 +459,10 @@ class _BoardContentState extends State<BoardContent> {
                     .doc(widget.selected_item.docName)
                     .collection('comment')
                     .doc(data.id)
-                    .delete();
+                    .delete().then((value) => ScaffoldMessenger.of(context)
+                    .showSnackBar(SnackBar(
+                    content:
+                    Text('댓글 삭제 완료'))));
                 Navigator.pop(context, true);
                 countDocuments();
               },

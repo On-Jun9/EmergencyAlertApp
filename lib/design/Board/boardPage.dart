@@ -29,11 +29,6 @@ class _boardPageState extends State<boardPage> {
 
   var _lastRow = 0;
   final FETCH_ROW = 20;
-  Text _text = Text(
-      '',
-      textAlign: TextAlign.center,
-      style: TextStyle(fontSize: 10)
-  );
 
   var stream;
   ScrollController _scrollController = new ScrollController();
@@ -90,6 +85,7 @@ class _boardPageState extends State<boardPage> {
               return Center(child: CircularProgressIndicator()); //로딩
             } else {
               return ListView.builder(
+                // physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
                 controller: _scrollController,
                 itemCount: snapshot.data!.docs.length,
                 itemBuilder: (context, i) {
