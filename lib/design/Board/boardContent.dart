@@ -46,6 +46,7 @@ class _BoardContentState extends State<BoardContent> {
     FirebaseAuth.instance.currentUser == null
         ? userId = '에러'
         : userId = FirebaseAuth.instance.currentUser!.displayName!;
+
   }
 
   @override
@@ -436,12 +437,18 @@ class _BoardContentState extends State<BoardContent> {
           contentPadding: EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 10.0),
           actions: <Widget>[
             TextButton(
-              onPressed: () {
-                // stack에서 alert 창 pop
-                FirebaseFirestore.instance
-                    .collection('게시판')
-                    .doc(widget.selected_item.docName)
-                    .delete();
+              onPressed: () {//하위 컬렉션(댓글) 까지 삭제
+                FirebaseFirestore.instance.collection('게시판').doc(widget.selected_item.docName).collection('comment').get().then((value) => {
+                  for(var data in value.docs){
+                    FirebaseFirestore.instance.collection('게시판').doc(widget.selected_item.docName).collection('comment').doc(data.id).delete().then((value) => {
+                      FirebaseFirestore.instance.collection('게시판').doc(widget.selected_item.docName).delete()
+                    })
+                  }
+                });
+                // FirebaseFirestore.instance
+                //     .collection('게시판')
+                //     .doc(widget.selected_item.docName)
+                //     .delete();
                 Navigator.pop(context, true);
               },
               child: Text('확인'),
