@@ -363,31 +363,17 @@ class _BoardContentState extends State<BoardContent> {
                                           .showSnackBar(SnackBar(
                                               content: Text('로그인이 필요합니다.')));
                                     } else {
-                                      showDialog(
-                                        context: context,
-                                        builder: (BuildContext context) {
-                                          return AlertDialog(
-                                            content: SingleChildScrollView(
-                                              child: ListBody(
-                                                children: <Widget>[
-                                                  Text(
-                                                      '댓글은 최대 100글자 까지 작성 가능합니다'),
-                                                ],
-                                              ),
-                                            ),
-                                            contentPadding: EdgeInsets.fromLTRB(
-                                                24.0, 24.0, 24.0, 10.0),
-                                            actions: <Widget>[
-                                              TextButton(
-                                                onPressed: () {
-                                                  Navigator.pop(context, false);
-                                                },
-                                                child: Text('확인'),
-                                              ),
-                                            ],
-                                          );
-                                        },
-                                      );
+                                      FirebaseFirestore.instance
+                                          .collection('게시판')
+                                          .doc(widget.selected_item.docName)
+                                          .collection('comment')
+                                          .add({
+                                        'commentC': _replyController.text,
+                                        'id': userId,
+                                        'uid': userUid,
+                                        'time': FieldValue.serverTimestamp(),
+                                      }).then((value) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('댓글 등록 완료'))));
+                                      _replyController.text = '';
                                     }
                                   },
                                 ),
