@@ -1,8 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_team_project/design/Board/boardPage.dart';
 import 'package:flutter_team_project/design/Board/modifyForm.dart';
+import 'package:flutter_team_project/design/ShowDialog.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 
@@ -27,6 +30,9 @@ class _BoardContentState extends State<BoardContent> {
   String sTitle = '';
   Timestamp sTime = Timestamp(0, 0);
   String sContent = '';
+  String userUid = '';
+  String userId = '';
+  String sUserUid = '';
 
   var _replyController = TextEditingController();
 
@@ -34,21 +40,13 @@ class _BoardContentState extends State<BoardContent> {
   void initState() {
     super.initState();
     initializeDateFormatting();
-    countDocuments(); //리스트 사이즈 변경
-  }
-
-  countDocuments() async {
-    //리스트 사이즈 변경
-    QuerySnapshot _myDoc = await FirebaseFirestore.instance
-        .collection('게시판')
-        .doc(widget.selected_item.docName)
-        .collection('comment')
-        .get();
-    List<DocumentSnapshot> _myDocCount = _myDoc.docs;
-    print(_myDocCount.length); // Count of Documents in Collection
-    setState(() {
-      list_size = _myDocCount.length.toDouble();
-    });
+    // countDocuments(); //리스트 사이즈 변경
+    FirebaseAuth.instance.currentUser == null
+        ? userUid = '에러'
+        : userUid = FirebaseAuth.instance.currentUser!.uid;
+    FirebaseAuth.instance.currentUser == null
+        ? userId = '에러'
+        : userId = FirebaseAuth.instance.currentUser!.displayName!;
   }
 
   @override
@@ -59,27 +57,30 @@ class _BoardContentState extends State<BoardContent> {
             .doc(widget.selected_item.docName)
             .snapshots(),
         builder: (context, snapshot) {
-          if (!snapshot.hasData || !snapshot.data!.exists){
+          if (!snapshot.hasData || !snapshot.data!.exists) {
             return Scaffold(
               appBar: AppBar(
                 title: Text('게시판'),
               ),
               body: Center(child: CircularProgressIndicator()),
             );
-          }  else {
+          } else {
             print('list size 값 1: ' + list_size.toString());
             sWriter = snapshot.data!['writer'];
             sTime = snapshot.data!['time'];
             sTitle = snapshot.data!['title'];
             sContent = snapshot.data!['content'];
+            sUserUid = snapshot.data!['uid'];
             _load123(context);
-            BoardData selectedData = BoardData(widget.selected_item.docName);
+            BoardData selectedData =
+                BoardData(widget.selected_item.docName, sUserUid);
             return Scaffold(
                 appBar: AppBar(
                   title: Text('게시판'),
                 ),
                 body: ListView(
-                  physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+                  physics: const BouncingScrollPhysics(
+                      parent: AlwaysScrollableScrollPhysics()),
                   children: <Widget>[
                     Container(
                       color: Colors.blueGrey[50],
@@ -137,26 +138,89 @@ class _BoardContentState extends State<BoardContent> {
                           Expanded(
                             child: PopupMenuButton<Settings>(
                               onSelected: (Settings result) {
-                                print(result);
-                                switch (result) {
-                                  case Settings.modify:
-                                  // 게시글 수정 네비게이터
-                                    Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          //페이지 이동
-                                          builder: (context) =>
-                                              ModifyForm(sDocId: selectedData),
-                                        ));
-                                    break;
-                                  case Settings.delete:
-                                  // 게시글 삭제 네비게이터
-                                    _MakeSureWhetherDeleteThisItem(context);
-                                    break;
+                                if (FirebaseAuth.instance.currentUser == null) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('로그인이 필요합니다.')));
+                                } else {
+                                  print(result);
+                                  switch (result) {
+                                    case Settings.modify:
+                                      // 게시글 수정 네비게이터
+                                      if (sUserUid == userUid) {
+                                        Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              //페이지 이동
+                                              builder: (context) => ModifyForm(
+                                                  sDocId: selectedData),
+                                            ));
+                                      } else {
+                                        showDialog(
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return AlertDialog(
+                                              content: SingleChildScrollView(
+                                                child: ListBody(
+                                                  children: <Widget>[
+                                                    Text('본인의 게시글만 수정 가능합니다'),
+                                                  ],
+                                                ),
+                                              ),
+                                              contentPadding:
+                                                  EdgeInsets.fromLTRB(
+                                                      24.0, 24.0, 24.0, 10.0),
+                                              actions: <Widget>[
+                                                TextButton(
+                                                  onPressed: () {
+                                                    Navigator.pop(
+                                                        context, false);
+                                                  },
+                                                  child: Text('확인'),
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
+                                      }
+                                      break;
+                                    case Settings.delete:
+                                      // 게시글 삭제 네비게이터
+                                      if (sUserUid == userUid) {
+                                        _MakeSureWhetherDeleteThisItem(context);
+                                      } else {
+                                        showDialog(
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return AlertDialog(
+                                              content: SingleChildScrollView(
+                                                child: ListBody(
+                                                  children: <Widget>[
+                                                    Text('본인의 게시글만 삭제 가능합니다'),
+                                                  ],
+                                                ),
+                                              ),
+                                              contentPadding:
+                                                  EdgeInsets.fromLTRB(
+                                                      24.0, 24.0, 24.0, 10.0),
+                                              actions: <Widget>[
+                                                TextButton(
+                                                  onPressed: () {
+                                                    Navigator.pop(
+                                                        context, false);
+                                                  },
+                                                  child: Text('확인'),
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
+                                      }
+                                      break;
+                                  }
                                 }
                               },
                               itemBuilder: (BuildContext context) =>
-                              <PopupMenuEntry<Settings>>[
+                                  <PopupMenuEntry<Settings>>[
                                 const PopupMenuItem<Settings>(
                                   value: Settings.modify,
                                   child: Text('게시글 수정'),
@@ -178,12 +242,16 @@ class _BoardContentState extends State<BoardContent> {
                         height: 1,
                       ),
                     ),
-                    Container(
-                      height: 300,
+                    ConstrainedBox(
+                      constraints: new BoxConstraints(
+                        minHeight: 300,
+                      ),
                       child: Padding(
                         padding: const EdgeInsets.only(
                             left: 25, top: 15, right: 25, bottom: 15),
                         child: ListView(
+                          physics: NeverScrollableScrollPhysics(),
+                          shrinkWrap: true,
                           children: <Widget>[
                             Text(
                               sContent,
@@ -219,7 +287,7 @@ class _BoardContentState extends State<BoardContent> {
                       height: 1,
                     ),
                     Container(
-                      height: list_size * 125,
+                      // height: list_size * 122,
                       child: Padding(
                         padding: const EdgeInsets.only(
                             left: 25, top: 15, right: 25, bottom: 15),
@@ -252,6 +320,9 @@ class _BoardContentState extends State<BoardContent> {
                                 padding: const EdgeInsets.only(
                                     top: 10, left: 27, right: 15),
                                 child: TextField(
+                                  inputFormatters: [
+                                    new LengthLimitingTextInputFormatter(100)
+                                  ],
                                   controller: _replyController,
                                   decoration: InputDecoration(
                                     border: OutlineInputBorder(),
@@ -269,7 +340,7 @@ class _BoardContentState extends State<BoardContent> {
                             Expanded(
                               child: Padding(
                                 padding:
-                                const EdgeInsets.only(top: 10, right: 25),
+                                    const EdgeInsets.only(top: 10, right: 25),
                                 child: ElevatedButton(
                                   child: Text(
                                     '등록',
@@ -286,32 +357,38 @@ class _BoardContentState extends State<BoardContent> {
                                     ).shadowColor,
                                   ),
                                   onPressed: () {
-                                    FirebaseFirestore.instance
-                                        .collection('게시판')
-                                        .doc(widget.selected_item.docName)
-                                        .collection('comment')
-                                        .add({
-                                      'commentC': _replyController.text,
-                                      'id': '임시Id',
-                                      'uid': '유저 UID값',
-                                      'time': FieldValue.serverTimestamp(),
-                                    }).then((value) => {
+                                    if (FirebaseAuth.instance.currentUser ==
+                                        null) {
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(SnackBar(
-                                          content:
-                                          Text('댓글 등록 완료'))),
-                                      _replyController.text = '',
-                                    });
-                                    countDocuments();
-                                    // text가 listtile로 출력됨. - listtile 내에서 삭제기능만 넣을 예정.
-                                    // print('댓글 정렬 값 : '+i_replySorting.toString());
-                                    // print('댓글 순번 : '+i_reply.toString());
-                                    // _addReplyData(ReplyData(i_replySorting, i_reply, widget.selected_item.writer, _replyController.text, now));
-                                    //
-                                    // // pop 이 되어서 DB가 있다고 해도 변수 값이 리셋됨.
-                                    // i_replySorting--;
-                                    // i_reply++;
-                                    //
+                                              content: Text('로그인이 필요합니다.')));
+                                    } else {
+                                      showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return AlertDialog(
+                                            content: SingleChildScrollView(
+                                              child: ListBody(
+                                                children: <Widget>[
+                                                  Text(
+                                                      '댓글은 최대 100글자 까지 작성 가능합니다'),
+                                                ],
+                                              ),
+                                            ),
+                                            contentPadding: EdgeInsets.fromLTRB(
+                                                24.0, 24.0, 24.0, 10.0),
+                                            actions: <Widget>[
+                                              TextButton(
+                                                onPressed: () {
+                                                  Navigator.pop(context, false);
+                                                },
+                                                child: Text('확인'),
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      );
+                                    }
                                   },
                                 ),
                               ),
@@ -322,11 +399,11 @@ class _BoardContentState extends State<BoardContent> {
                     ),
                   ],
                 )
-              // Text(DateFormat.yMd('ko_KR')
-              //     .add_jms()
-              //     .format(widget.selected_item.time.toDate()).toString() +'\n'+
-              //     widget.selected_item.title +'\n'+ widget.selected_item.writer),
-            );
+                // Text(DateFormat.yMd('ko_KR')
+                //     .add_jms()
+                //     .format(widget.selected_item.time.toDate()).toString() +'\n'+
+                //     widget.selected_item.title +'\n'+ widget.selected_item.writer),
+                );
           }
         });
   }
@@ -344,6 +421,8 @@ class _BoardContentState extends State<BoardContent> {
           return Center(child: CircularProgressIndicator()); //로딩
         } else {
           return ListView.builder(
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(), //스크롤
             itemCount: snapshot.data!.docs.length,
             itemBuilder: (context, i) {
               return _buildReplyWidget(context, snapshot.data!.docs[i]);
@@ -425,7 +504,34 @@ class _BoardContentState extends State<BoardContent> {
               icon: Icon(Icons.remove),
               onPressed: () {
                 // 댓글 삭제 여부 묻기.
-                _MakeSureWhetherDeleteThisReply(data);
+                if (userUid == data['uid']) {
+                  _MakeSureWhetherDeleteThisReply(data);
+                } else {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        content: SingleChildScrollView(
+                          child: ListBody(
+                            children: <Widget>[
+                              Text('본인의 댓글만 삭제 가능합니다'),
+                            ],
+                          ),
+                        ),
+                        contentPadding:
+                            EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 10.0),
+                        actions: <Widget>[
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context, false);
+                            },
+                            child: Text('확인'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                }
               }),
         ),
         Container(
@@ -441,42 +547,77 @@ class _BoardContentState extends State<BoardContent> {
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
-        return AlertDialog(
-          content: SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                Text('이 댓글을 삭제하시겠습니까?'),
-              ],
+        if (FirebaseAuth.instance.currentUser == null) {
+          return AlertDialog(
+            content: SingleChildScrollView(
+              child: ListBody(
+                children: <Widget>[
+                  Text('로그인이 필요합니다.'),
+                ],
+              ),
             ),
-          ),
-          contentPadding: EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 10.0),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                // stack에서 alert 창 pop
-                FirebaseFirestore.instance
-                    .collection('게시판')
-                    .doc(widget.selected_item.docName)
-                    .collection('comment')
-                    .doc(data.id)
-                    .delete().then((value) => ScaffoldMessenger.of(context)
-                    .showSnackBar(SnackBar(
-                    content:
-                    Text('댓글 삭제 완료'))));
-                Navigator.pop(context, true);
-                countDocuments();
-              },
-              child: Text('확인'),
+            contentPadding: EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 10.0),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context, false);
+                },
+                child: Text('확인'),
+              ),
+            ],
+          );
+        } else {
+          return AlertDialog(
+            content: SingleChildScrollView(
+              child: ListBody(
+                children: <Widget>[
+                  Text('이 댓글을 삭제하시겠습니까?'),
+                ],
+              ),
             ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context, false);
-              },
-              child: Text('취소'),
-            ),
-          ],
-        );
+            contentPadding: EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 10.0),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  // stack에서 alert 창 pop
+                  FirebaseFirestore.instance
+                      .collection('게시판')
+                      .doc(widget.selected_item.docName)
+                      .collection('comment')
+                      .doc(data.id)
+                      .delete()
+                      .then((value) => ScaffoldMessenger.of(context)
+                          .showSnackBar(SnackBar(content: Text('댓글 삭제 완료'))));
+                  Navigator.pop(context, true);
+                  // countDocuments();
+                },
+                child: Text('확인'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context, false);
+                },
+                child: Text('취소'),
+              ),
+            ],
+          );
+        }
       },
     );
+  }
+
+  countDocuments() async {
+    //shrinkwrap 적용후 사용 안함
+    //리스트 사이즈 변경
+    QuerySnapshot _myDoc = await FirebaseFirestore.instance
+        .collection('게시판')
+        .doc(widget.selected_item.docName)
+        .collection('comment')
+        .get();
+    List<DocumentSnapshot> _myDocCount = _myDoc.docs;
+    print(_myDocCount.length); // Count of Documents in Collection
+    setState(() {
+      list_size = _myDocCount.length.toDouble();
+    });
   }
 }

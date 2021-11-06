@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class InsertForm extends StatefulWidget {
 
@@ -12,11 +14,19 @@ class InsertForm extends StatefulWidget {
 class InsertFormState extends State<InsertForm> {
 
   final _formKey = GlobalKey<FormState>();
+  String userUid = '';
+  String userId = '';
 
   @override
   void initState() {
     super.initState();
     // print('게시글 작성 위젯 생성 (initState)');
+    FirebaseAuth.instance.currentUser == null
+        ? userUid = '에러'
+        : userUid = FirebaseAuth.instance.currentUser!.uid;
+    FirebaseAuth.instance.currentUser == null
+        ? userId = '에러'
+        : userId = FirebaseAuth.instance.currentUser!.displayName!;
   }
 
   // 게시글 제목 , 게시글 내용 controller
@@ -64,6 +74,9 @@ class InsertFormState extends State<InsertForm> {
                   children: <Widget>[
                     Expanded(
                       child: TextFormField(
+                        inputFormatters: [
+                          new LengthLimitingTextInputFormatter(50)
+                        ],
                         controller: _titleController,
                         autofocus: true,
                         validator: (value) {
@@ -149,6 +162,9 @@ class InsertFormState extends State<InsertForm> {
                   children: <Widget>[
                     Expanded(
                       child: TextFormField(
+                        inputFormatters: [
+                          new LengthLimitingTextInputFormatter(1000)
+                        ],
                         controller: _contentController,
                         validator: (value) {
                           if(value!="") {return null;}
@@ -263,12 +279,12 @@ class InsertFormState extends State<InsertForm> {
                             'content': _contentController.text,
                             'time': FieldValue.serverTimestamp(),
                             'title': _titleController.text,
-                            'uid': '임시값',
-                            'writer': '임시작성자',
+                            'uid': userUid,
+                            'writer': userId,
                           });
 
                           ScaffoldMessenger.of(context)
-                              .showSnackBar(SnackBar(content: Text('삽입됨')));
+                              .showSnackBar(SnackBar(content: Text('작성 완료')));
                           Navigator.pop(context);
                         }
 

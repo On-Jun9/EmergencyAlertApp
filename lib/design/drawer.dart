@@ -41,7 +41,7 @@ class _drawerMenuState extends State<drawerMenu> {
                   accountName: Text(FirebaseAuth
                       .instance.currentUser!.displayName
                       .toString() +
-                      ' 으로 로그인중'),
+                      ' 님 로그인중'),
                   accountEmail:
                   Text(FirebaseAuth.instance.currentUser!.email.toString()),
                   decoration: BoxDecoration(

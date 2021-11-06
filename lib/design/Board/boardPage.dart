@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_team_project/design/Board/boardContent.dart';
@@ -12,9 +13,10 @@ class BoardData {
   // String title; // 제목
   // Timestamp time; // 시간
   String docName; //id값
+  String userUid;
 
   // BoardData(this.writer, this.title, this.time,this.docName);
-  BoardData(this.docName);
+  BoardData(this.docName,this.userUid);
 
 }
 
@@ -67,13 +69,18 @@ class _boardPageState extends State<boardPage> {
               Icons.add,
             ),
             onPressed: () {
-              Navigator.push(
-                //네비게이터
-                  context,
-                  MaterialPageRoute(
-                    //페이지 이동
-                    builder: (context) => InsertForm(),
-                  ));
+              if (FirebaseAuth.instance.currentUser == null) {
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(SnackBar(content: Text('로그인이 필요합니다.')));
+              } else {
+                Navigator.push(
+                  //네비게이터
+                    context,
+                    MaterialPageRoute(
+                      //페이지 이동
+                      builder: (context) => InsertForm(),
+                    ));
+              }
             },
           ),
         ],
@@ -123,7 +130,7 @@ class _boardPageState extends State<boardPage> {
   }
 
   Widget _buildListItem(BuildContext context, DocumentSnapshot data) {
-    BoardData selectedData = BoardData(data.id);
+    BoardData selectedData = BoardData(data.id,data['uid']);
     Timestamp? time = data['time'];
     if(time == null){
       time = Timestamp(1633964070, 0);
@@ -134,7 +141,7 @@ class _boardPageState extends State<boardPage> {
               title: Row(
                 children: <Widget>[
                   Expanded(
-                    flex: 4,
+                    flex: 5,
                     child: Text(
                       data['title'],
                     ),
@@ -147,7 +154,7 @@ class _boardPageState extends State<boardPage> {
                     ),
                   ),
                   Expanded(
-                    flex: 1,
+                    flex: 2,
                     child: Text(
                         DateFormat.yMd('ko_KR')
                         .add_jms()
