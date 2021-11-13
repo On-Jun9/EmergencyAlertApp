@@ -6,7 +6,7 @@
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
 
     <application
-        android:label="flutter_team_project"
+        android:label="응급 상황 제보 어플"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
