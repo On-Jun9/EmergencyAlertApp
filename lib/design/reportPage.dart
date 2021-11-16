@@ -148,13 +148,31 @@ class _ReportPageState extends State<ReportPage> {
                   : Image.file(_image!),
             ),
           ),
-          TextButton(
-              onPressed: () {
-                setState(() {
-                  _takePhoto(ImageSource.gallery);
-                });
-              },
-              child: Text('갤러리')),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _takePhoto(ImageSource.camera);
+                      });
+                    },
+                    child: Text('카메라')),
+              ),
+              Expanded(
+                child: TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _takePhoto(ImageSource.gallery);
+                      });
+                    },
+                    child: Text('갤러리')),
+              )
+
+          ],
+          ),
           Container(
             margin: EdgeInsets.all(8),
             child: Text('위치', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -195,6 +213,10 @@ class _ReportPageState extends State<ReportPage> {
         ],
       ),
     );
+  }
+
+  Future _cameraPhoto(ImageSource imageSource) async{
+
   }
 
   Future _takePhoto(ImageSource imageSource) async {//사진 가져오기

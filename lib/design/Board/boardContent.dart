@@ -272,13 +272,14 @@ class _BoardContentState extends State<BoardContent> {
                       child: Padding(
                         padding: const EdgeInsets.only(
                             left: 25, top: 15, right: 25, bottom: 15),
-                        child: Text(
-                          '댓글',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        child:CommentCount(context),
+                        // Text(
+                        //   '댓글',
+                        //   style: TextStyle(
+                        //     fontSize: 20,
+                        //     fontWeight: FontWeight.bold,
+                        //   ),
+                        // ),
                       ),
                     ),
                     Container(
@@ -444,6 +445,45 @@ class _BoardContentState extends State<BoardContent> {
               return _buildReplyWidget(context, snapshot.data!.docs[i]);
             },
           );
+        }
+      },
+    );
+  }
+  Widget CommentCount(BuildContext context) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('게시판')
+          .doc(widget.selected_item.docName)
+          .collection('comment')
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return Center(child: CircularProgressIndicator()); //로딩
+        } else {
+          print(snapshot.data!.docs.length);
+          return Text(
+                '댓글'+' [' + snapshot.data!.docs.length.toString() + ']',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              );
+        }
+      },
+    );
+  }
+  Widget _loadCount(BuildContext context) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('게시판')
+          .doc(widget.selected_item.docName)
+          .collection('comment')
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return Center(child: CircularProgressIndicator()); //로딩
+        } else {
+          return Text('assadadsadsadd');
         }
       },
     );

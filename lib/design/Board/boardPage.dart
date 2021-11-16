@@ -129,6 +129,27 @@ class _boardPageState extends State<boardPage> {
     );
   }
 
+  Widget CommentCount(BuildContext context, DocumentSnapshot data) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('게시판')
+          .doc(data.id)
+          .collection('comment')
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return Center(child: CircularProgressIndicator()); //로딩
+        } else {
+          print(snapshot.data!.docs.length);
+          return Text(
+            data['writer']+' ['+snapshot.data!.docs.length.toString() + ']',
+            style: TextStyle(fontSize: 12),
+          );
+        }
+      },
+    );
+  }
+
   Widget _buildListItem(BuildContext context, DocumentSnapshot data) {
     BoardData selectedData = BoardData(data.id,data['uid']);
     Timestamp? time = data['time'];
@@ -142,9 +163,10 @@ class _boardPageState extends State<boardPage> {
                 children: <Widget>[
                   Expanded(
                     flex: 5,
-                    child: Text(
-                      data['title'],
-                    ),
+                    child: CommentCount(context,data)
+                    // Text(
+                    //   data['title'],
+                    // ),
                   ),
                   Expanded(
                     flex: 2,
