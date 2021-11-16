@@ -217,7 +217,7 @@ class InsertFormState extends State<InsertForm> {
                       ),
                       onPressed: () {
 
-                        if(_titleController.text=='') {
+                        if(_titleController.text.trim()=='') {
                           showDialog(
                             context: context,
                             barrierDismissible: false,
@@ -246,7 +246,7 @@ class InsertFormState extends State<InsertForm> {
                           );
                         }
 
-                        else if(_contentController.text=='') {
+                        else if(_contentController.text.trim()=='') {
                           showDialog(
                             context: context,
                             barrierDismissible: false,

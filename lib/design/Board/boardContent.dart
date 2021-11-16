@@ -362,7 +362,35 @@ class _BoardContentState extends State<BoardContent> {
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(SnackBar(
                                               content: Text('로그인이 필요합니다.')));
-                                    } else {
+                                    }else if(_replyController.text.trim()==''){
+                                      showDialog(
+                                        context: context,
+                                        barrierDismissible: false,
+                                        builder: (BuildContext context) {
+                                          return AlertDialog(
+                                            title: Text('입력 오류'),
+                                            content: SingleChildScrollView(
+                                              child: ListBody(
+                                                children: <Widget>[
+                                                  Text('댓글을 입력해주세요.'),
+                                                ],
+                                              ),
+                                            ),
+                                            contentPadding:
+                                            EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 10.0),
+                                            actions: <Widget>[
+                                              TextButton(
+                                                onPressed: () {
+                                                  Navigator.of(context).pop();
+                                                },
+                                                child: Text('확인'),
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      );
+                                    }
+                                    else {
                                       FirebaseFirestore.instance
                                           .collection('게시판')
                                           .doc(widget.selected_item.docName)
@@ -445,10 +473,10 @@ class _BoardContentState extends State<BoardContent> {
                     })
                   }
                 });
-                // FirebaseFirestore.instance
-                //     .collection('게시판')
-                //     .doc(widget.selected_item.docName)
-                //     .delete();
+                FirebaseFirestore.instance
+                    .collection('게시판')
+                    .doc(widget.selected_item.docName)
+                    .delete();
                 Navigator.pop(context, true);
               },
               child: Text('확인'),
