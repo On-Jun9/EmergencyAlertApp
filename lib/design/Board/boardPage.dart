@@ -142,7 +142,7 @@ class _boardPageState extends State<boardPage> {
         } else {
           print(snapshot.data!.docs.length);
           return Text(
-            data['writer']+' ['+snapshot.data!.docs.length.toString() + ']',
+            data['title']+' ['+snapshot.data!.docs.length.toString() + ']',
             style: TextStyle(fontSize: 12),
           );
         }

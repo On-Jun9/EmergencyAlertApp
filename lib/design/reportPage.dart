@@ -27,6 +27,7 @@ class _ReportPageState extends State<ReportPage> {
   final _valueList = ['교통사고', '화재', '기타'];
   var _selectedValue = '교통사고';
   String _comment = '';
+  String _other = '';
 
   var location = new Location();
   GeoPoint currentGeo = GeoPoint(0, 0);
@@ -110,8 +111,11 @@ class _ReportPageState extends State<ReportPage> {
                   setState(() {
                     _selectedValue = value.toString();
                   });
+
                 },
               )),
+          if(_selectedValue == '기타')
+          _ShowTextField(context),
           Container(
             margin: EdgeInsets.all(8),
             child: Text('설명', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -128,9 +132,9 @@ class _ReportPageState extends State<ReportPage> {
               },
               decoration: InputDecoration(
                 helperText: '상황 설명',
-                suffixIcon: Icon(
-                  Icons.check_circle,
-                ),
+                // suffixIcon: Icon(
+                //   Icons.check_circle,
+                // ),
                 border: OutlineInputBorder(),
               ),
             ),
@@ -215,10 +219,6 @@ class _ReportPageState extends State<ReportPage> {
     );
   }
 
-  Future _cameraPhoto(ImageSource imageSource) async{
-
-  }
-
   Future _takePhoto(ImageSource imageSource) async {//사진 가져오기
     var image = await ImagePicker()
         .pickImage(source: imageSource, maxHeight: 300, maxWidth: 300);
@@ -243,24 +243,46 @@ class _ReportPageState extends State<ReportPage> {
   Future<void> addFirestore() async {
     //데이터 삽입
     try{
-      FirebaseFirestore.instance.collection('제보').add({
-        'uid': userUid,
-        '긴급도': _emer.toString(),
-        '설명': _comment,
-        '유형': _selectedValue,
-        '좌표': currentGeo,
-        '제보시간': FieldValue.serverTimestamp()
-      }).then((value) => {
-        if (_image == null)
-          {print('no Image')}
-        else
-          {
-            FirebaseStorage.instance
-                .ref()
-                .child('images/${value.id}')
-                .putFile(_image!),
-          }
-      });
+      if(_other.trim() == ''){
+        FirebaseFirestore.instance.collection('제보').add({
+          'uid': userUid,
+          '긴급도': _emer.toString(),
+          '설명': _comment,
+          '유형': _selectedValue,
+          '좌표': currentGeo,
+          '제보시간': FieldValue.serverTimestamp()
+        }).then((value) => {
+          if (_image == null)
+            {print('no Image')}
+          else
+            {
+              FirebaseStorage.instance
+                  .ref()
+                  .child('images/${value.id}')
+                  .putFile(_image!),
+            }
+        });
+      }else{
+        FirebaseFirestore.instance.collection('제보').add({
+          'uid': userUid,
+          '긴급도': _emer.toString(),
+          '설명': _comment,
+          '유형': _other,
+          '좌표': currentGeo,
+          '제보시간': FieldValue.serverTimestamp()
+        }).then((value) => {
+          if (_image == null)
+            {print('no Image')}
+          else
+            {
+              FirebaseStorage.instance
+                  .ref()
+                  .child('images/${value.id}')
+                  .putFile(_image!),
+            }
+        });
+      }
+
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('제보 성공!')));
     }catch(error){
@@ -268,6 +290,28 @@ class _ReportPageState extends State<ReportPage> {
           .showSnackBar(SnackBar(content: Text('제보 실패')));
     }
 
+  }
+
+  Widget _ShowTextField(BuildContext context) {
+      return Container(
+        margin: EdgeInsets.fromLTRB(20, 8, 8, 8),
+        child: TextFormField(
+          maxLines: null,
+          textInputAction: TextInputAction.newline,
+          autofocus: false,
+          maxLength: 30,
+          onChanged: (text) {
+            _other = text;
+          },
+          decoration: InputDecoration(
+            helperText: '유형 직접 작성',
+            // suffixIcon: Icon(
+            //   Icons.check_circle,
+            // ),
+            border: OutlineInputBorder(),
+          ),
+        ),
+      );
   }
 
 }
