@@ -320,6 +320,8 @@ class _BoardContentState extends State<BoardContent> {
                                 padding: const EdgeInsets.only(
                                     top: 10, left: 27, right: 15),
                                 child: TextField(
+                                  maxLines: null,
+                                  textInputAction: TextInputAction.newline,
                                   inputFormatters: [
                                     new LengthLimitingTextInputFormatter(100)
                                   ],

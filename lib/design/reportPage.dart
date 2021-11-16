@@ -119,8 +119,10 @@ class _ReportPageState extends State<ReportPage> {
           Container(
             margin: EdgeInsets.fromLTRB(20,8,8,8),
             child: TextFormField(
+              maxLines: null,
+              textInputAction: TextInputAction.newline,
               autofocus: false,
-              maxLength: 20,
+              maxLength: 30,
               onChanged: (text) {
                 _comment = text;
               },
