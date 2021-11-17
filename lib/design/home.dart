@@ -114,7 +114,7 @@ class homeState extends State<home> {
                             change['좌표'].latitude, change['좌표'].longitude),
                         infoWindow: InfoWindow(
                           title: change['유형'] == '' ? '설명없음' : change['유형'],
-                          snippet: change['설명'] == '' ? '설명없음' : change['설명'],
+                          snippet: change['설명'].trim() == '' ? '설명없음' : change['설명'],
                           onTap: () {
                             setState(() {
                               // markerIdVal = markerIdVal;

@@ -71,7 +71,7 @@ class _ShowDialogState extends State<ShowDialog> {
                           return AlertDialog(
                             content: imageUrl == ''
                                 ? CircularProgressIndicator()
-                                : Image.network(imageUrl,width: 300,height: 300),
+                                : InteractiveViewer(child: Image.network(imageUrl,width: 300,height: 300)),
                           );
                         },
                       );

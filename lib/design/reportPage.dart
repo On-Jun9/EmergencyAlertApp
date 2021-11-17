@@ -250,7 +250,7 @@ class _ReportPageState extends State<ReportPage> {
       FirebaseFirestore.instance.collection('제보').add({
         'uid': userUid,
         '긴급도': _emer.toString(),
-        '설명': _commentController.text,
+        '설명': _commentController.text.trim()=='' ? '' : _commentController.text,
         '유형': _otherController.text.trim() =='' ? _selectedValue : _otherController.text,
         '좌표': currentGeo,
         '제보시간': FieldValue.serverTimestamp(),

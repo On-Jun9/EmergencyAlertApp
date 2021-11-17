@@ -66,7 +66,7 @@ void openPage(BuildContext context) {
           title: const Text('교통 사고 대처법'),
         ),
         body: Center(
-          child: Image.asset("images/health11.gif"),
+          child: InteractiveViewer(child: Image.asset("images/health11.gif")),
         ),
       );
     },
@@ -82,7 +82,7 @@ void openPage1(BuildContext context) {
           title: const Text('골절 대처법'),
         ),
         body: Center(
-            child:  Image.asset("images/health222.png")
+            child:  InteractiveViewer(child: Image.asset("images/health222.png"))
         ),
       );
     },
@@ -98,7 +98,7 @@ void openPage2(BuildContext context) {
 
         ),
         body: Center(
-            child:   Image.asset("images/health.jpg")
+            child:   InteractiveViewer(child: Image.asset("images/health.jpg"))
         ),
       );
     },
@@ -114,7 +114,7 @@ void openPage3(BuildContext context) {
 
         ),
         body: Center(
-            child:  Image.asset("images/health123.png")
+            child:  InteractiveViewer(child: Image.asset("images/health123.png"))
         ),
       );
     },
@@ -130,7 +130,7 @@ void openPage4(BuildContext context) {
 
         ),
         body: Center(
-            child:  Image.asset("images/health1111.png")
+            child:  InteractiveViewer(child: Image.asset("images/health1111.png"))
         ),
       );
     },
