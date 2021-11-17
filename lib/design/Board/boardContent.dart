@@ -46,7 +46,6 @@ class _BoardContentState extends State<BoardContent> {
     FirebaseAuth.instance.currentUser == null
         ? userId = '에러'
         : userId = FirebaseAuth.instance.currentUser!.displayName!;
-
   }
 
   @override
@@ -272,7 +271,7 @@ class _BoardContentState extends State<BoardContent> {
                       child: Padding(
                         padding: const EdgeInsets.only(
                             left: 25, top: 15, right: 25, bottom: 15),
-                        child:CommentCount(context),
+                        child: CommentCount(context),
                         // Text(
                         //   '댓글',
                         //   style: TextStyle(
@@ -365,7 +364,8 @@ class _BoardContentState extends State<BoardContent> {
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(SnackBar(
                                               content: Text('로그인이 필요합니다.')));
-                                    }else if(_replyController.text.trim()==''){
+                                    } else if (_replyController.text.trim() ==
+                                        '') {
                                       showDialog(
                                         context: context,
                                         barrierDismissible: false,
@@ -379,8 +379,8 @@ class _BoardContentState extends State<BoardContent> {
                                                 ],
                                               ),
                                             ),
-                                            contentPadding:
-                                            EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 10.0),
+                                            contentPadding: EdgeInsets.fromLTRB(
+                                                24.0, 24.0, 24.0, 10.0),
                                             actions: <Widget>[
                                               TextButton(
                                                 onPressed: () {
@@ -392,8 +392,7 @@ class _BoardContentState extends State<BoardContent> {
                                           );
                                         },
                                       );
-                                    }
-                                    else {
+                                    } else {
                                       FirebaseFirestore.instance
                                           .collection('게시판')
                                           .doc(widget.selected_item.docName)
@@ -403,7 +402,11 @@ class _BoardContentState extends State<BoardContent> {
                                         'id': userId,
                                         'uid': userUid,
                                         'time': FieldValue.serverTimestamp(),
-                                      }).then((value) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('댓글 등록 완료'))));
+                                      }).then((value) =>
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(SnackBar(
+                                                      content:
+                                                          Text('댓글 등록 완료'))));
                                       _replyController.text = '';
                                     }
                                   },
@@ -449,6 +452,7 @@ class _BoardContentState extends State<BoardContent> {
       },
     );
   }
+
   Widget CommentCount(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
@@ -462,28 +466,12 @@ class _BoardContentState extends State<BoardContent> {
         } else {
           print(snapshot.data!.docs.length);
           return Text(
-                '댓글'+' [' + snapshot.data!.docs.length.toString() + ']',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              );
-        }
-      },
-    );
-  }
-  Widget _loadCount(BuildContext context) {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('게시판')
-          .doc(widget.selected_item.docName)
-          .collection('comment')
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return Center(child: CircularProgressIndicator()); //로딩
-        } else {
-          return Text('assadadsadsadd');
+            '댓글' + ' [' + snapshot.data!.docs.length.toString() + ']',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          );
         }
       },
     );
@@ -507,14 +495,30 @@ class _BoardContentState extends State<BoardContent> {
           contentPadding: EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 10.0),
           actions: <Widget>[
             TextButton(
-              onPressed: () {//하위 컬렉션(댓글) 까지 삭제
-                FirebaseFirestore.instance.collection('게시판').doc(widget.selected_item.docName).collection('comment').get().then((value) => {
-                  for(var data in value.docs){
-                    FirebaseFirestore.instance.collection('게시판').doc(widget.selected_item.docName).collection('comment').doc(data.id).delete().then((value) => {
-                      FirebaseFirestore.instance.collection('게시판').doc(widget.selected_item.docName).delete()
-                    })
-                  }
-                });
+              onPressed: () {
+                //하위 컬렉션(댓글) 까지 삭제
+                FirebaseFirestore.instance
+                    .collection('게시판')
+                    .doc(widget.selected_item.docName)
+                    .collection('comment')
+                    .get()
+                    .then((value) => {
+                          for (var data in value.docs)
+                            {
+                              FirebaseFirestore.instance
+                                  .collection('게시판')
+                                  .doc(widget.selected_item.docName)
+                                  .collection('comment')
+                                  .doc(data.id)
+                                  .delete()
+                                  .then((value) => {
+                                        FirebaseFirestore.instance
+                                            .collection('게시판')
+                                            .doc(widget.selected_item.docName)
+                                            .delete()
+                                      })
+                            }
+                        });
                 FirebaseFirestore.instance
                     .collection('게시판')
                     .doc(widget.selected_item.docName)
@@ -568,6 +572,9 @@ class _BoardContentState extends State<BoardContent> {
                 // 댓글 삭제 여부 묻기.
                 if (userUid == data['uid']) {
                   _MakeSureWhetherDeleteThisReply(data);
+                } else if (FirebaseAuth.instance.currentUser == null) {
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(SnackBar(content: Text('로그인이 필요합니다.')));
                 } else {
                   showDialog(
                     context: context,

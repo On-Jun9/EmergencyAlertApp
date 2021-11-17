@@ -26,14 +26,15 @@ class _ReportPageState extends State<ReportPage> {
   emer? _emer = emer.u;
   final _valueList = ['교통사고', '화재', '기타'];
   var _selectedValue = '교통사고';
-  String _comment = '';
-  String _other = '';
 
   var location = new Location();
   GeoPoint currentGeo = GeoPoint(0, 0);
   LatLng currentPosition = LatLng(0, 0);
   String _choise = '';
   String userUid = '';
+
+  var _commentController = TextEditingController();
+  var _otherController = TextEditingController();
 
   @override
   void initState() {
@@ -110,6 +111,7 @@ class _ReportPageState extends State<ReportPage> {
                 onChanged: (value) {
                   setState(() {
                     _selectedValue = value.toString();
+                    _otherController.text = '';
                   });
 
                 },
@@ -124,12 +126,13 @@ class _ReportPageState extends State<ReportPage> {
             margin: EdgeInsets.fromLTRB(20,8,8,8),
             child: TextFormField(
               maxLines: null,
+              controller: _commentController,
               textInputAction: TextInputAction.newline,
               autofocus: false,
               maxLength: 30,
-              onChanged: (text) {
-                _comment = text;
-              },
+              // onChanged: (text) {
+              //   _comment = text;
+              // },
               decoration: InputDecoration(
                 helperText: '상황 설명',
                 // suffixIcon: Icon(
@@ -242,47 +245,29 @@ class _ReportPageState extends State<ReportPage> {
 
   Future<void> addFirestore() async {
     //데이터 삽입
+    var _checkimage = _image==null ? '무' : '유' ;
     try{
-      if(_other.trim() == ''){
-        FirebaseFirestore.instance.collection('제보').add({
-          'uid': userUid,
-          '긴급도': _emer.toString(),
-          '설명': _comment,
-          '유형': _selectedValue,
-          '좌표': currentGeo,
-          '제보시간': FieldValue.serverTimestamp()
-        }).then((value) => {
-          if (_image == null)
-            {print('no Image')}
-          else
-            {
-              FirebaseStorage.instance
-                  .ref()
-                  .child('images/${value.id}')
-                  .putFile(_image!),
-            }
-        });
-      }else{
-        FirebaseFirestore.instance.collection('제보').add({
-          'uid': userUid,
-          '긴급도': _emer.toString(),
-          '설명': _comment,
-          '유형': _other,
-          '좌표': currentGeo,
-          '제보시간': FieldValue.serverTimestamp()
-        }).then((value) => {
-          if (_image == null)
-            {print('no Image')}
-          else
-            {
-              FirebaseStorage.instance
-                  .ref()
-                  .child('images/${value.id}')
-                  .putFile(_image!),
-            }
-        });
-      }
-
+      FirebaseFirestore.instance.collection('제보').add({
+        'uid': userUid,
+        '긴급도': _emer.toString(),
+        '설명': _commentController.text,
+        '유형': _otherController.text.trim() =='' ? _selectedValue : _otherController.text,
+        '좌표': currentGeo,
+        '제보시간': FieldValue.serverTimestamp(),
+        '이미지 유/무' : _checkimage,
+      }).then((value) => {
+        if (_image == null)
+          {
+            print('no Image')
+          }
+        else
+          {
+            FirebaseStorage.instance
+                .ref()
+                .child('images/${value.id}')
+                .putFile(_image!),
+          }
+      });
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('제보 성공!')));
     }catch(error){
@@ -298,11 +283,12 @@ class _ReportPageState extends State<ReportPage> {
         child: TextFormField(
           maxLines: null,
           textInputAction: TextInputAction.newline,
+          controller: _otherController,
           autofocus: false,
           maxLength: 30,
-          onChanged: (text) {
-            _other = text;
-          },
+          // onChanged: (text) {
+          //   _other = text;
+          // },
           decoration: InputDecoration(
             helperText: '유형 직접 작성',
             // suffixIcon: Icon(
